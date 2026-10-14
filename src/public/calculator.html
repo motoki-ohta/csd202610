@@ -1,0 +1,369 @@
+<!DOCTYPE html>
+<html lang="ja">
+    <head>
+        <meta charset="utf-8">
+        <title>関数電卓</title>
+        <style>
+            * {
+                box-sizing: border-box;
+            }
+
+            body {
+                display: flex;
+                justify-content: center;
+                align-items: center;
+                min-height: 100vh;
+                margin: 0;
+                background: #1e1e2f;
+                font-family: "Segoe UI", "Hiragino Sans", sans-serif;
+            }
+
+            .calculator {
+                width: 420px;
+                padding: 20px;
+                border-radius: 16px;
+                background: #2b2b3d;
+                box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+            }
+
+            .display {
+                width: 100%;
+                min-height: 80px;
+                margin-bottom: 16px;
+                padding: 10px 16px;
+                border-radius: 10px;
+                background: #15151f;
+                color: #fff;
+                box-sizing: border-box;
+            }
+
+            .display .mode {
+                font-size: 0.8rem;
+                color: #8a8aa0;
+                text-align: left;
+            }
+
+            .display .expr {
+                font-size: 1.8rem;
+                text-align: right;
+                overflow-x: auto;
+                white-space: nowrap;
+            }
+
+            .buttons {
+                display: grid;
+                grid-template-columns: repeat(6, 1fr);
+                gap: 8px;
+            }
+
+            button {
+                height: 48px;
+                border: none;
+                border-radius: 10px;
+                font-size: 1rem;
+                color: #fff;
+                background: #3f3f55;
+                cursor: pointer;
+                transition: background 0.15s ease;
+            }
+
+            button:hover {
+                background: #51516d;
+            }
+
+            button:active {
+                transform: scale(0.96);
+            }
+
+            button.func {
+                background: #35607a;
+            }
+
+            button.func:hover {
+                background: #40738f;
+            }
+
+            button.operator {
+                background: #4d6bff;
+            }
+
+            button.operator:hover {
+                background: #5f7aff;
+            }
+
+            button.equal {
+                background: #ff9f43;
+            }
+
+            button.equal:hover {
+                background: #ffb366;
+            }
+
+            button.clear {
+                background: #ff5252;
+            }
+
+            button.clear:hover {
+                background: #ff6e6e;
+            }
+
+            button.mode-toggle {
+                background: #6b6b8f;
+            }
+
+            button.mode-toggle:hover {
+                background: #7f7fa8;
+            }
+        </style>
+    </head>
+    <body>
+        <div class="calculator">
+            <div class="display">
+                <div class="mode" id="modeLabel">DEG</div>
+                <div class="expr" id="display">0</div>
+            </div>
+            <div class="buttons">
+                <button class="mode-toggle" id="degRadBtn" onclick="toggleDegRad()">Deg</button>
+                <button onclick="appendParen('(')">(</button>
+                <button onclick="appendParen(')')">)</button>
+                <button class="clear" onclick="clearDisplay()">C</button>
+                <button class="clear" onclick="deleteLast()">⌫</button>
+                <button class="operator" onclick="appendOperator('%')">%</button>
+
+                <button class="func" onclick="appendFunction('sin(')">sin</button>
+                <button class="func" onclick="appendFunction('cos(')">cos</button>
+                <button class="func" onclick="appendFunction('tan(')">tan</button>
+                <button onclick="appendNumber('7')">7</button>
+                <button onclick="appendNumber('8')">8</button>
+                <button onclick="appendNumber('9')">9</button>
+
+                <button class="func" onclick="appendFunction('log(')">log</button>
+                <button class="func" onclick="appendFunction('ln(')">ln</button>
+                <button class="func" onclick="appendFunction('sqrt(')">√</button>
+                <button onclick="appendNumber('4')">4</button>
+                <button onclick="appendNumber('5')">5</button>
+                <button onclick="appendNumber('6')">6</button>
+
+                <button class="func" onclick="squareLast()">x²</button>
+                <button class="func" onclick="appendOperator('^')">x^y</button>
+                <button class="func" onclick="factorialLast()">n!</button>
+                <button onclick="appendNumber('1')">1</button>
+                <button onclick="appendNumber('2')">2</button>
+                <button onclick="appendNumber('3')">3</button>
+
+                <button class="func" onclick="appendConstant('π')">π</button>
+                <button class="func" onclick="appendConstant('e')">e</button>
+                <button class="func" onclick="reciprocalLast()">1/x</button>
+                <button onclick="toggleSign()">±</button>
+                <button onclick="appendNumber('0')">0</button>
+                <button onclick="appendNumber('.')">.</button>
+
+                <button class="func" onclick="appendAnswer()">Ans</button>
+                <button class="operator" onclick="appendOperator('/')">÷</button>
+                <button class="operator" onclick="appendOperator('*')">×</button>
+                <button class="operator" onclick="appendOperator('-')">-</button>
+                <button class="operator" onclick="appendOperator('+')">+</button>
+                <button class="equal" onclick="calculate()">=</button>
+            </div>
+        </div>
+
+        <script>
+            const display = document.getElementById('display');
+            const modeLabel = document.getElementById('modeLabel');
+            const degRadBtn = document.getElementById('degRadBtn');
+
+            let expression = '';
+            let isDegree = true;
+            let lastAnswer = 0;
+
+            function sinD(x) {
+                return Math.sin((x * Math.PI) / 180);
+            }
+
+            function cosD(x) {
+                return Math.cos((x * Math.PI) / 180);
+            }
+
+            function tanD(x) {
+                return Math.tan((x * Math.PI) / 180);
+            }
+
+            function factorial(n) {
+                n = Math.round(n);
+                if (n < 0) {
+                    return NaN;
+                }
+                let result = 1;
+                for (let i = 2; i <= n; i++) {
+                    result *= i;
+                }
+                return result;
+            }
+
+            function updateDisplay() {
+                display.textContent = expression === '' ? '0' : expression.replace(/\*/g, '×');
+            }
+
+            function appendNumber(num) {
+                expression += num;
+                updateDisplay();
+            }
+
+            function appendOperator(op) {
+                if (expression === '') {
+                    return;
+                }
+                const lastChar = expression.slice(-1);
+                if ('+-*/%^'.includes(lastChar)) {
+                    expression = expression.slice(0, -1) + op;
+                } else {
+                    expression += op;
+                }
+                updateDisplay();
+            }
+
+            function appendParen(paren) {
+                expression += paren;
+                updateDisplay();
+            }
+
+            function appendFunction(fn) {
+                expression += fn;
+                updateDisplay();
+            }
+
+            function appendConstant(c) {
+                expression += c;
+                updateDisplay();
+            }
+
+            function appendAnswer() {
+                expression += String(lastAnswer);
+                updateDisplay();
+            }
+
+            function squareLast() {
+                if (expression === '') {
+                    return;
+                }
+                expression = '(' + expression + ')^2';
+                updateDisplay();
+            }
+
+            function reciprocalLast() {
+                if (expression === '') {
+                    return;
+                }
+                expression = '1/(' + expression + ')';
+                updateDisplay();
+            }
+
+            function factorialLast() {
+                if (expression === '') {
+                    return;
+                }
+                expression += '!';
+                updateDisplay();
+            }
+
+            function toggleSign() {
+                if (expression === '') {
+                    return;
+                }
+                if (expression.startsWith('-(') && expression.endsWith(')')) {
+                    expression = expression.slice(2, -1);
+                } else {
+                    expression = '-(' + expression + ')';
+                }
+                updateDisplay();
+            }
+
+            function toggleDegRad() {
+                isDegree = !isDegree;
+                degRadBtn.textContent = isDegree ? 'Deg' : 'Rad';
+                modeLabel.textContent = isDegree ? 'DEG' : 'RAD';
+            }
+
+            function deleteLast() {
+                expression = expression.slice(0, -1);
+                updateDisplay();
+            }
+
+            function clearDisplay() {
+                expression = '';
+                updateDisplay();
+            }
+
+            function calculate() {
+                if (expression === '' || expression === 'Error') {
+                    return;
+                }
+                try {
+                    if (!/^[0-9+\-*/%.()^πe!a-z]+$/.test(expression)) {
+                        throw new Error('invalid characters');
+                    }
+
+                    let expr = expression;
+
+                    const factRegex = /(\d+(\.\d+)?)!/;
+                    while (factRegex.test(expr)) {
+                        expr = expr.replace(factRegex, 'factorial($1)');
+                    }
+
+                    expr = expr.replace(/π/g, 'Math.PI');
+                    expr = expr.replace(/e/g, 'Math.E');
+                    expr = expr.replace(/\^/g, '**');
+
+                    if (isDegree) {
+                        expr = expr
+                            .replace(/sin\(/g, 'sinD(')
+                            .replace(/cos\(/g, 'cosD(')
+                            .replace(/tan\(/g, 'tanD(');
+                    } else {
+                        expr = expr
+                            .replace(/sin\(/g, 'Math.sin(')
+                            .replace(/cos\(/g, 'Math.cos(')
+                            .replace(/tan\(/g, 'Math.tan(');
+                    }
+                    expr = expr.replace(/log\(/g, 'Math.log10(');
+                    expr = expr.replace(/ln\(/g, 'Math.log(');
+                    expr = expr.replace(/sqrt\(/g, 'Math.sqrt(');
+
+                    const result = Function(
+                        'sinD',
+                        'cosD',
+                        'tanD',
+                        'factorial',
+                        '"use strict"; return (' + expr + ')'
+                    )(sinD, cosD, tanD, factorial);
+
+                    if (typeof result !== 'number' || !isFinite(result)) {
+                        throw new Error('invalid result');
+                    }
+
+                    lastAnswer = result;
+                    expression = String(result);
+                } catch (e) {
+                    expression = 'Error';
+                }
+                updateDisplay();
+            }
+
+            document.addEventListener('keydown', (e) => {
+                if (/[0-9.]/.test(e.key)) {
+                    appendNumber(e.key);
+                } else if ('+-*/%'.includes(e.key)) {
+                    appendOperator(e.key);
+                } else if (e.key === '(' || e.key === ')') {
+                    appendParen(e.key);
+                } else if (e.key === 'Enter' || e.key === '=') {
+                    calculate();
+                } else if (e.key === 'Backspace') {
+                    deleteLast();
+                } else if (e.key === 'Escape') {
+                    clearDisplay();
+                }
+            });
+        </script>
+    </body>
+</html>
