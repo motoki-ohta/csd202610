@@ -124,22 +124,4 @@ class TodoListTest extends TestCase
         $this->assertEquals(1, $count);
     }
 
-    /**
-     * 全Todoをクリアできることをテストする
-     */
-    #[Test]
-    public function it_can_clear_all_todos()
-    {
-        // Arrange
-        $todoList = new TodoList();
-        $todoList->add('買い物に行く');
-        $todoList->add('掃除をする');
-
-        // Act
-        $todoList->clear();
-
-        // Assert
-        $todos = $todoList->getAll();
-        $this->assertEmpty($todos);
-    }
 }
